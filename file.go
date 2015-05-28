@@ -13,10 +13,29 @@ type FInfo struct {
 	Size    int64
 	Mode    os.FileMode
 	ModTime time.Time
+	Content []byte
 }
 
-func ListFInfo(dirname string) ([]FInfo, error) {
-	fis, err := ioutil.ReadDir(dirname)
+func NewFInfo(dir string, fi os.FileInfo, readFlag bool) FInfo {
+	f := FInfo{
+		Name:    fi.Name(),
+		Size:    fi.Size(),
+		Mode:    fi.Mode(),
+		ModTime: fi.ModTime(),
+	}
+
+	if readFlag {
+		r, err := os.Open(path.Join(dir, f.Name))
+		if err == nil {
+			f.Content, err = ioutil.ReadAll(r)
+		}
+	}
+
+	return f
+}
+
+func ListFInfo(dir string, readContent func(os.FileInfo) bool) ([]FInfo, error) {
+	fis, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return []FInfo{}, err
 	}
@@ -24,18 +43,13 @@ func ListFInfo(dirname string) ([]FInfo, error) {
 	fs := []FInfo{}
 	for _, fi := range fis {
 		if fi.Mode()&os.ModeSymlink != 0 {
-			li, err := os.Stat(path.Join(dirname, fi.Name()))
+			li, err := os.Stat(path.Join(dir, fi.Name()))
 			if err == nil {
 				fi = li
 			}
 		}
 		if fi.Mode().IsRegular() && !strings.HasPrefix(fi.Name(), ".") {
-			fs = append(fs, FInfo{
-				Name:    fi.Name(),
-				Size:    fi.Size(),
-				Mode:    fi.Mode(),
-				ModTime: fi.ModTime(),
-			})
+			fs = append(fs, NewFInfo(dir, fi, readContent(fi)))
 		}
 	}
 	return fs, nil

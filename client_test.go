@@ -10,6 +10,8 @@ import (
 )
 
 func TestClient(t *testing.T) {
+	println("TestClient")
+
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
 	req, err := http.NewRequest("PUT", "http://localhost:8080/", nil)
@@ -30,6 +32,6 @@ func TestClient(t *testing.T) {
 	}
 
 	for _, f := range fs {
-		println(f.Mode.String(), f.Name, f.ModTime.String(), f.Size)
+		PrintFInfo(f)
 	}
 }
