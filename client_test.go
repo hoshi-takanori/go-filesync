@@ -1,12 +1,15 @@
+// +build client
+
 package main
 
 import (
 	"encoding/gob"
 	"net/http"
+	"testing"
 	"time"
 )
 
-func main() {
+func TestClient(t *testing.T) {
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
 	req, err := http.NewRequest("PUT", "http://localhost:8080/", nil)
