@@ -1,14 +1,13 @@
 package main
 
 import (
-	"os"
 	"testing"
 )
 
 func TestListFInfo(t *testing.T) {
 	println("TestListFInfo")
 
-	fs, err := ListFInfo(".", func(os.FileInfo) bool { return true })
+	fs, err := ListFInfo(".")
 	if err != nil {
 		panic(err)
 	}

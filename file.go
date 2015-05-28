@@ -16,25 +16,26 @@ type FInfo struct {
 	Content []byte
 }
 
-func NewFInfo(dir string, fi os.FileInfo, readFlag bool) FInfo {
-	f := FInfo{
+func NewFInfo(dir string, fi os.FileInfo) FInfo {
+	return FInfo{
 		Name:    fi.Name(),
 		Size:    fi.Size(),
 		Mode:    fi.Mode(),
 		ModTime: fi.ModTime(),
 	}
-
-	if readFlag {
-		r, err := os.Open(path.Join(dir, f.Name))
-		if err == nil {
-			f.Content, err = ioutil.ReadAll(r)
-		}
-	}
-
-	return f
 }
 
-func ListFInfo(dir string, readContent func(os.FileInfo) bool) ([]FInfo, error) {
+func (f *FInfo) ReadContent(dir string) error {
+	r, err := os.Open(path.Join(dir, f.Name))
+	if err != nil {
+		return err
+	}
+
+	f.Content, err = ioutil.ReadAll(r)
+	return err
+}
+
+func ListFInfo(dir string) ([]FInfo, error) {
 	fis, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return []FInfo{}, err
@@ -49,7 +50,7 @@ func ListFInfo(dir string, readContent func(os.FileInfo) bool) ([]FInfo, error) 
 			}
 		}
 		if fi.Mode().IsRegular() && !strings.HasPrefix(fi.Name(), ".") {
-			fs = append(fs, NewFInfo(dir, fi, readContent(fi)))
+			fs = append(fs, NewFInfo(dir, fi))
 		}
 	}
 	return fs, nil
