@@ -2,13 +2,13 @@ package main
 
 import ()
 
-func SyncFiles(dir string, remoteFs []FInfo) ([]FInfo, error) {
+func SyncFiles(dir Dir, remoteFs []FInfo) ([]FInfo, error) {
 	m := map[string]FInfo{}
 	for _, f := range remoteFs {
 		m[f.Name] = f
 	}
 
-	localFs, err := ListFInfo(dir)
+	localFs, err := dir.List()
 	if err != nil {
 		return []FInfo{}, err
 	}
@@ -25,7 +25,7 @@ func SyncFiles(dir string, remoteFs []FInfo) ([]FInfo, error) {
 	return []FInfo{}, nil
 }
 
-func SyncFile(dir, name string, l, r FInfo) {
+func SyncFile(dir Dir, name string, l, r FInfo) {
 	if l.ModTime.Unix() == r.ModTime.Unix() {
 		println("skip", name)
 		if l.Size != r.Size {

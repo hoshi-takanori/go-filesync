@@ -16,7 +16,14 @@ type FInfo struct {
 	Content []byte
 }
 
-func NewFInfo(dir string, fi os.FileInfo) FInfo {
+type Dir interface {
+	List() ([]FInfo, error)
+	Read(f *FInfo) error
+}
+
+type FSDir string
+
+func NewFInfo(fi os.FileInfo) FInfo {
 	return FInfo{
 		Name:    fi.Name(),
 		Size:    fi.Size(),
@@ -25,18 +32,8 @@ func NewFInfo(dir string, fi os.FileInfo) FInfo {
 	}
 }
 
-func (f *FInfo) ReadContent(dir string) error {
-	r, err := os.Open(path.Join(dir, f.Name))
-	if err != nil {
-		return err
-	}
-
-	f.Content, err = ioutil.ReadAll(r)
-	return err
-}
-
-func ListFInfo(dir string) ([]FInfo, error) {
-	fis, err := ioutil.ReadDir(dir)
+func (dir FSDir) List() ([]FInfo, error) {
+	fis, err := ioutil.ReadDir(string(dir))
 	if err != nil {
 		return []FInfo{}, err
 	}
@@ -44,14 +41,24 @@ func ListFInfo(dir string) ([]FInfo, error) {
 	fs := []FInfo{}
 	for _, fi := range fis {
 		if fi.Mode()&os.ModeSymlink != 0 {
-			li, err := os.Stat(path.Join(dir, fi.Name()))
+			li, err := os.Stat(path.Join(string(dir), fi.Name()))
 			if err == nil {
 				fi = li
 			}
 		}
 		if fi.Mode().IsRegular() && !strings.HasPrefix(fi.Name(), ".") {
-			fs = append(fs, NewFInfo(dir, fi))
+			fs = append(fs, NewFInfo(fi))
 		}
 	}
 	return fs, nil
+}
+
+func (dir FSDir) Read(f *FInfo) error {
+	r, err := os.Open(path.Join(string(dir), f.Name))
+	if err != nil {
+		return err
+	}
+
+	f.Content, err = ioutil.ReadAll(r)
+	return err
 }

@@ -9,12 +9,12 @@ import (
 func TestSyncFiles(t *testing.T) {
 	println("TestSyncFiles")
 
-	remoteFs, err := ListFInfo("dst")
+	remoteFs, err := FSDir("dst").List()
 	if err != nil {
 		panic(err)
 	}
 
-	fs, err := SyncFiles("src", remoteFs)
+	fs, err := SyncFiles(FSDir("src"), remoteFs)
 	if err != nil {
 		panic(err)
 	}

@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-func TestListFInfo(t *testing.T) {
-	println("TestListFInfo")
+func TestList(t *testing.T) {
+	println("TestList")
 
-	fs, err := ListFInfo(".")
+	fs, err := FSDir(".").List()
 	if err != nil {
 		panic(err)
 	}
