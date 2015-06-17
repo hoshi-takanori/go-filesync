@@ -19,6 +19,8 @@ type FInfo struct {
 type Dir interface {
 	List() ([]FInfo, error)
 	Read(f *FInfo) error
+	Write(f FInfo) error
+	Remove(name string) error
 }
 
 type FSDir string
@@ -61,4 +63,12 @@ func (dir FSDir) Read(f *FInfo) error {
 
 	f.Content, err = ioutil.ReadAll(r)
 	return err
+}
+
+func (dir FSDir) Write(f FInfo) error {
+	return nil
+}
+
+func (dir FSDir) Remove(name string) error {
+	return nil
 }
