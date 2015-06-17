@@ -109,8 +109,8 @@ func CheckDir(t *testing.T, dir FakeDir, fis ...FInfo) {
 	}
 }
 
-func CheckFis(t *testing.T, fis1 []FInfo, fis2 ...FInfo) {
-	CheckDir(t, NewFakeDir("fis", fis1...), fis2...)
+func CheckFis(t *testing.T, name string, fis1 []FInfo, fis2 ...FInfo) {
+	CheckDir(t, NewFakeDir(name, fis1...), fis2...)
 }
 
 func TestFakeDir(t *testing.T) {
@@ -132,7 +132,7 @@ func TestFakeDir(t *testing.T) {
 	)
 
 	fis, _ := dir.List()
-	CheckFis(t, fis,
+	CheckFis(t, "fis", fis,
 		FakeFInfo("a", now, []byte("aaa")).Copy(),
 		FakeFInfo("b", old, []byte("bbbbb")).Copy(),
 		FakeFInfo("c", now, []byte{}).Copy(),
