@@ -8,6 +8,45 @@ import (
 	"testing"
 )
 
+func TestSyncFiles(t *testing.T) {
+	println("TestSyncFiles")
+
+	now := time.Now()
+	old := now.Add(-100 * time.Second)
+
+	localDir, remoteDir := CreateDirs(now, old)
+	remoteFs, _ := remoteDir.List()
+
+	CheckFirstFis(t, now, old, remoteFs)
+
+	for i, fi := range remoteFs {
+		if fi.Name == "c1" || fi.Name == "c2" {
+			remoteDir.Read(&remoteFs[i])
+		}
+	}
+
+	_, err := SyncFiles(&localDir, remoteFs)
+	if err != nil {
+		panic(err)
+	}
+
+	localFs, _ := localDir.List()
+
+	for i, fi := range localFs {
+		if fi.Name == "b1" || fi.Name == "b2" {
+			localDir.Read(&localFs[i])
+		}
+	}
+
+	_, err = SyncFiles(&remoteDir, localFs)
+	if err != nil {
+		panic(err)
+	}
+
+	CheckFinalDir(t, now, localDir)
+	CheckFinalDir(t, now, remoteDir)
+}
+
 func CreateDirs(now, old time.Time) (FakeDir, FakeDir) {
 	localDir := NewFakeDir("local",
 		FakeFInfo("a", now, []byte("aaa")),
@@ -36,21 +75,28 @@ func CreateDirs(now, old time.Time) (FakeDir, FakeDir) {
 	return localDir, remoteDir
 }
 
-func TestSyncFiles(t *testing.T) {
-	println("TestSyncFiles")
+func CheckFirstFis(t *testing.T, now, old time.Time, fis []FInfo) {
+	CheckFis(t, fis,
+		FakeFInfo("a", now, []byte("aaa")).Copy(),
 
-	now := time.Now()
-	old := now.Add(-100 * time.Second)
+		FakeFInfo("b1", old, []byte("b1old")).Copy(),
+		FakeFInfo("b3", old, []byte("b3old")).Copy(),
 
-	localDir, remoteDir := CreateDirs(now, old)
-	remoteFs, _ := remoteDir.List()
+		FakeFInfo("c1", now, []byte("c1new")).Copy(),
+		FakeFInfo("c2", now, []byte("c2new")).Copy(),
+		FakeFInfo("c3", now, []byte{}).Copy(),
+		FakeFInfo("c4", now, []byte{}).Copy(),
+	)
+}
 
-	fs, err := SyncFiles(&localDir, remoteFs)
-	if err != nil {
-		panic(err)
-	}
+func CheckFinalDir(t *testing.T, now time.Time, dir FakeDir) {
+	CheckDir(t, dir,
+		FakeFInfo("a", now, []byte("aaa")),
 
-	for _, f := range fs {
-		PrintFInfo(f)
-	}
+		FakeFInfo("b1", now, []byte("b1new")),
+		FakeFInfo("b2", now, []byte("b2new")),
+
+		FakeFInfo("c1", now, []byte("c1new")),
+		FakeFInfo("c2", now, []byte("c2new")),
+	)
 }

@@ -34,12 +34,14 @@ func SyncFile(dir Dir, name string, l, r FInfo) {
 			println("SIZE ZERO")
 		}
 	} else if l.ModTime.Unix() > r.ModTime.Unix() && l.Size > 0 {
-		println("get", name)
-	} else if l.ModTime.Unix() < r.ModTime.Unix() && r.Size > 0 {
 		println("put", name)
+	} else if l.ModTime.Unix() < r.ModTime.Unix() && r.Size > 0 {
+		println("get", name)
+		dir.Write(r)
 	} else {
 		if l.Name != "" {
 			println("rm local", name)
+			dir.Remove(name)
 		}
 		if r.Name != "" {
 			println("rm remote", name)

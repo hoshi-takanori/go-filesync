@@ -89,7 +89,7 @@ func CheckDir(t *testing.T, dir FakeDir, fis ...FInfo) {
 	for _, fi := range fis {
 		f, ok := dir.fmap[fi.Name]
 		if !ok {
-			t.Errorf("%s: %s is new", dir.name, fi.Name)
+			t.Errorf("%s: %s is missing", dir.name, fi.Name)
 		} else {
 			if f.Size != fi.Size {
 				t.Errorf("%s: %s size %d != %d", dir.name, f.Name, f.Size, fi.Size)
@@ -105,7 +105,7 @@ func CheckDir(t *testing.T, dir FakeDir, fis ...FInfo) {
 	}
 
 	for name, _ := range m {
-		t.Errorf("%s: %s is old", dir.name, name)
+		t.Errorf("%s: %s exists", dir.name, name)
 	}
 }
 
