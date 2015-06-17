@@ -1,10 +1,13 @@
-// +build sync
+// +build fake sync
 
 package main
 
 import (
 	"os"
+	"reflect"
 	"time"
+
+	"testing"
 )
 
 type FakeDir struct {
@@ -30,7 +33,7 @@ func FakeFInfo(name string, mtime time.Time, content []byte) FInfo {
 	}
 }
 
-func CopyFInfo(fi FInfo) FInfo {
+func (fi FInfo) Copy() FInfo {
 	return FInfo{
 		Name:    fi.Name,
 		Size:    fi.Size,
@@ -42,7 +45,7 @@ func CopyFInfo(fi FInfo) FInfo {
 func (dir FakeDir) List() ([]FInfo, error) {
 	fs := []FInfo{}
 	for _, fi := range dir.fmap {
-		fs = append(fs, CopyFInfo(fi))
+		fs = append(fs, fi.Copy())
 	}
 	return fs, nil
 }
@@ -71,4 +74,67 @@ func (dir *FakeDir) Remove(name string) error {
 		return nil
 	}
 	return os.ErrNotExist
+}
+
+func CheckDir(t *testing.T, dir FakeDir, fis ...FInfo) {
+	if len(dir.fmap) != len(fis) {
+		t.Errorf("%s: len %d != %d", dir.name, len(dir.fmap), len(fis))
+	}
+
+	m := map[string]bool{}
+	for name, _ := range dir.fmap {
+		m[name] = true
+	}
+
+	for _, fi := range fis {
+		f, ok := dir.fmap[fi.Name]
+		if !ok {
+			t.Errorf("%s: %s is new", dir.name, fi.Name)
+		} else {
+			if f.Size != fi.Size {
+				t.Errorf("%s: %s size %d != %d", dir.name, f.Name, f.Size, fi.Size)
+			}
+			if f.ModTime != fi.ModTime {
+				t.Errorf("%s: %s mtime differ", dir.name, f.Name)
+			}
+			if !reflect.DeepEqual(f.Content, fi.Content) {
+				t.Errorf("%s: %s content differ", dir.name, f.Name)
+			}
+			delete(m, fi.Name)
+		}
+	}
+
+	for name, _ := range m {
+		t.Errorf("%s: %s is old", dir.name, name)
+	}
+}
+
+func CheckFis(t *testing.T, fis1 []FInfo, fis2 ...FInfo) {
+	CheckDir(t, NewFakeDir("fis", fis1...), fis2...)
+}
+
+func TestFakeDir(t *testing.T) {
+	println("TestFakeDir")
+
+	now := time.Now()
+	old := now.Add(-100 * time.Second)
+
+	dir := NewFakeDir("dir",
+		FakeFInfo("a", now, []byte("aaa")),
+		FakeFInfo("b", old, []byte("bbbbb")),
+		FakeFInfo("c", now, []byte{}),
+	)
+
+	CheckDir(t, dir,
+		FakeFInfo("a", now, []byte("aaa")),
+		FakeFInfo("b", old, []byte("bbbbb")),
+		FakeFInfo("c", now, []byte{}),
+	)
+
+	fis, _ := dir.List()
+	CheckFis(t, fis,
+		FakeFInfo("a", now, []byte("aaa")).Copy(),
+		FakeFInfo("b", old, []byte("bbbbb")).Copy(),
+		FakeFInfo("c", now, []byte{}).Copy(),
+	)
 }

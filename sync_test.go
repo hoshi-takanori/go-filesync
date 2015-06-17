@@ -8,10 +8,7 @@ import (
 	"testing"
 )
 
-func CreateDirs() (FakeDir, FakeDir) {
-	now := time.Now()
-	old := now.Add(-100 * time.Second)
-
+func CreateDirs(now, old time.Time) (FakeDir, FakeDir) {
 	localDir := NewFakeDir("local",
 		FakeFInfo("a", now, []byte("aaa")),
 
@@ -42,7 +39,10 @@ func CreateDirs() (FakeDir, FakeDir) {
 func TestSyncFiles(t *testing.T) {
 	println("TestSyncFiles")
 
-	localDir, remoteDir := CreateDirs()
+	now := time.Now()
+	old := now.Add(-100 * time.Second)
+
+	localDir, remoteDir := CreateDirs(now, old)
 	remoteFs, _ := remoteDir.List()
 
 	fs, err := SyncFiles(&localDir, remoteFs)
