@@ -1,9 +1,10 @@
-// +build fake sync
+// +build fake fake_sync
 
 package main
 
 import (
 	"os"
+	"path"
 	"reflect"
 	"time"
 
@@ -60,6 +61,7 @@ func (dir FakeDir) Read(f *FInfo) error {
 }
 
 func (dir *FakeDir) Write(f FInfo) error {
+	println("save", path.Join(dir.name, f.Name))
 	if f.Size == 0 || len(f.Content) == 0 {
 		return os.ErrInvalid
 	}
@@ -68,6 +70,7 @@ func (dir *FakeDir) Write(f FInfo) error {
 }
 
 func (dir *FakeDir) Remove(name string) error {
+	println("rm", path.Join(dir.name, name))
 	_, ok := dir.fmap[name]
 	if ok {
 		delete(dir.fmap, name)

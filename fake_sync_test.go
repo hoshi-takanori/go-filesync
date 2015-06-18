@@ -1,4 +1,4 @@
-// +build sync
+// +build fake_sync
 
 package main
 
@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func TestSyncFiles(t *testing.T) {
-	println("TestSyncFiles")
+func TestFakeSyncFiles(t *testing.T) {
+	println("TestFakeSyncFiles")
 
 	now := time.Now()
 	old := now.Add(-100 * time.Second)
@@ -23,18 +23,21 @@ func TestSyncFiles(t *testing.T) {
 	}
 	CheckFirstFis(t, now, old, fs)
 
+	println("send")
 	fs, err = SyncFiles(SyncModeSend, &clientDir, fs)
 	if err != nil {
 		panic(err)
 	}
 	CheckSecondFis(t, now, old, fs)
 
+	println("both")
 	fs, err = SyncFiles(SyncModeBoth, &serverDir, fs)
 	if err != nil {
 		panic(err)
 	}
 	CheckThirdFis(t, now, old, fs)
 
+	println("receive")
 	fs, err = SyncFiles(SyncModeReceive, &clientDir, fs)
 	if err != nil {
 		panic(err)
