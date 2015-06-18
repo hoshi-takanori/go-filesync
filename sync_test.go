@@ -29,7 +29,7 @@ func TestSyncFiles(t *testing.T) {
 	src := FSDir("src")
 	dst := FSDir("dst")
 
-	fs, err := dst.List()
+	fs, err := SyncFiles(SyncModeBegin, &dst, nil)
 	if err != nil {
 		panic(err)
 	}

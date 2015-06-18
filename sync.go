@@ -1,23 +1,24 @@
 package main
 
 const (
-	SyncModeSend = iota
+	SyncModeBegin = iota
+	SyncModeSend
 	SyncModeBoth
 	SyncModeReceive
 )
 
 func SyncFiles(mode int, dir Dir, remoteFs []FInfo) ([]FInfo, error) {
+	localFs, err := dir.List()
+	if mode == SyncModeBegin || err != nil {
+		return localFs, err
+	}
+
+	result := []FInfo{}
+
 	m := map[string]FInfo{}
 	for _, f := range remoteFs {
 		m[f.Name] = f
 	}
-
-	localFs, err := dir.List()
-	if err != nil {
-		return nil, err
-	}
-
-	result := []FInfo{}
 
 	for _, f := range localFs {
 		r := SyncFile(mode, dir, f.Name, f, m[f.Name])

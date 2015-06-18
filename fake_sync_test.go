@@ -17,7 +17,7 @@ func TestFakeSyncFiles(t *testing.T) {
 	clientDir := CreateClientDir(now, old)
 	serverDir := CreateServerDir(now, old)
 
-	fs, err := serverDir.List()
+	fs, err := SyncFiles(SyncModeBegin, &serverDir, nil)
 	if err != nil {
 		panic(err)
 	}

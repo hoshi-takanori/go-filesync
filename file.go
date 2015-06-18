@@ -41,7 +41,7 @@ func (dir FSDir) Path(name string) string {
 func (dir FSDir) List() ([]FInfo, error) {
 	fis, err := ioutil.ReadDir(string(dir))
 	if err != nil {
-		return []FInfo{}, err
+		return nil, err
 	}
 
 	fs := []FInfo{}
