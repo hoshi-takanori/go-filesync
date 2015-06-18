@@ -3,33 +3,65 @@
 package main
 
 import (
-	"encoding/gob"
+	"bytes"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
 func main() {
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
-	req, err := http.NewRequest("PUT", "http://localhost:8080/", nil)
+	fis, err := ioutil.ReadDir("base")
 	if err != nil {
 		panic(err)
+	}
+
+	msg := NewMessage(SyncModeBegin)
+	for _, fi := range fis {
+		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+			msg.AddEntry(fi.Name(), nil)
+		}
+	}
+
+	msg2 := NewMessage(SyncModeBoth)
+	err = SyncClient(&client, msg, &msg2)
+	if err != nil {
+		panic(err)
+	}
+
+	err = SyncClient(&client, msg2, nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
+	var buf bytes.Buffer
+	err := msg.Encode(&buf)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("PUT", "http://localhost:8080/", &buf)
+	if err != nil {
+		return err
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer resp.Body.Close()
 
-	var fs []FInfo
-	err = gob.NewDecoder(resp.Body).Decode(&fs)
+	var res Message
+	err = res.Decode(resp.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	for _, f := range fs {
-		time := f.ModTime.Format("2006-01-02 15:04:05")
-		println(f.Mode.String(), time, f.Name, f.Size)
-	}
+	res.SyncEntries(msg2, "base")
+
+	return nil
 }

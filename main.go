@@ -3,28 +3,31 @@
 package main
 
 import (
-	"encoding/gob"
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/", FInfoHandler)
+	http.HandleFunc("/", SyncHandler)
 	http.ListenAndServe(":8080", nil)
 }
 
-func FInfoHandler(w http.ResponseWriter, r *http.Request) {
+func SyncHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PUT" {
 		http.Error(w, "Page Not Found", http.StatusNotFound)
 		return
 	}
 
-	fs, err := FSDir(".").List()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var msg Message
+	err := msg.Decode(r.Body)
+	if err != nil || (msg.Mode != SyncModeBegin && msg.Mode != SyncModeBoth) {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
-	err = gob.NewEncoder(w).Encode(fs)
+	res := NewMessage(msg.Mode + 1)
+	msg.SyncEntries(&res, "data")
+
+	err = res.Encode(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
