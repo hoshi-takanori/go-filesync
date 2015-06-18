@@ -6,20 +6,33 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"strings"
 	"time"
 )
 
 func main() {
+	err := LoadConfig("config.json")
+	if err != nil {
+		panic(err)
+	}
+
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
-	fis, err := ioutil.ReadDir("base")
+	fis, err := ioutil.ReadDir(config.ClientDir)
 	if err != nil {
 		panic(err)
 	}
 
 	msg := NewMessage(SyncModeBegin)
 	for _, fi := range fis {
+		if fi.Mode()&os.ModeSymlink != 0 {
+			li, err := os.Stat(path.Join(config.ClientDir, fi.Name()))
+			if err == nil {
+				fi = li
+			}
+		}
 		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
 			msg.AddEntry(fi.Name(), nil)
 		}
@@ -44,7 +57,7 @@ func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
 		return err
 	}
 
-	req, err := http.NewRequest("PUT", "http://localhost:8080/", &buf)
+	req, err := http.NewRequest("PUT", config.ServerURL, &buf)
 	if err != nil {
 		return err
 	}
@@ -61,7 +74,7 @@ func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
 		return err
 	}
 
-	res.SyncEntries(msg2, "base")
+	res.SyncEntries(msg2, config.ClientDir)
 
 	return nil
 }

@@ -7,8 +7,13 @@ import (
 )
 
 func main() {
+	err := LoadConfig("config.json")
+	if err != nil {
+		panic(err)
+	}
+
 	http.HandleFunc("/", SyncHandler)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(config.Address, nil)
 }
 
 func SyncHandler(w http.ResponseWriter, r *http.Request) {
@@ -19,13 +24,14 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 
 	var msg Message
 	err := msg.Decode(r.Body)
-	if err != nil || (msg.Mode != SyncModeBegin && msg.Mode != SyncModeBoth) {
+	if err != nil || msg.Token != config.Token ||
+		(msg.Mode != SyncModeBegin && msg.Mode != SyncModeBoth) {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
 
 	res := NewMessage(msg.Mode + 1)
-	msg.SyncEntries(&res, "data")
+	msg.SyncEntries(&res, config.ServerDir)
 
 	err = res.Encode(w)
 	if err != nil {

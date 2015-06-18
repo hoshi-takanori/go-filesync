@@ -1,0 +1,9 @@
+{
+	"token": "secret",
+
+	"address": ":8080",
+	"serverDir": "data",
+
+	"serverURL": "http://localhost:8080/",
+	"clientDir": "base"
+}

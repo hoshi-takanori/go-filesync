@@ -7,6 +7,7 @@ import (
 )
 
 type Message struct {
+	Token   string
 	Mode    int
 	Entries []Entry
 }
@@ -18,6 +19,7 @@ type Entry struct {
 
 func NewMessage(mode int) Message {
 	return Message{
+		Token:   config.Token,
 		Mode:    mode,
 		Entries: []Entry{},
 	}
