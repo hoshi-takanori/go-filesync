@@ -28,10 +28,7 @@ func SyncFiles(mode int, dir Dir, remoteFs []FInfo) ([]FInfo, error) {
 	}
 
 	for _, f := range m {
-		r := SyncFile(mode, dir, f.Name, FInfo{}, f)
-		if r != nil {
-			result = append(result, *r)
-		}
+		SyncFile(mode, dir, f.Name, FInfo{}, f)
 	}
 
 	return result, nil
@@ -39,7 +36,6 @@ func SyncFiles(mode int, dir Dir, remoteFs []FInfo) ([]FInfo, error) {
 
 func SyncFile(mode int, dir Dir, name string, l, r FInfo) *FInfo {
 	if l.ModTime.Unix() == r.ModTime.Unix() {
-		println("skip", name)
 		if l.Size != r.Size {
 			println("SIZE DIFFER: local", l.Size, "remote", r.Size)
 		} else if l.Size == 0 {
@@ -49,27 +45,20 @@ func SyncFile(mode int, dir Dir, name string, l, r FInfo) *FInfo {
 			return &l
 		}
 	} else if l.ModTime.Unix() > r.ModTime.Unix() && l.Size > 0 {
-		println("put", name)
 		if mode == SyncModeSend || mode == SyncModeBoth {
 			dir.Read(&l)
 			return &l
 		}
 	} else if l.ModTime.Unix() < r.ModTime.Unix() && r.Size > 0 {
-		println("get", name)
-		dir.Write(r)
-		if l.Name != "" && mode == SyncModeSend {
-			return &l
+		if mode == SyncModeBoth || mode == SyncModeReceive {
+			dir.Write(r)
 		}
-	} else {
-		if l.Name != "" {
-			println("rm local", name)
+	} else if l.Name != "" {
+		if mode == SyncModeBoth || mode == SyncModeReceive {
 			dir.Remove(name)
 		}
-		if r.Name != "" {
-			println("rm remote", name)
-			if l.Name != "" && (mode == SyncModeSend || mode == SyncModeBoth) {
-				return &l
-			}
+		if mode == SyncModeSend || mode == SyncModeBoth {
+			return &l
 		}
 	}
 	return nil

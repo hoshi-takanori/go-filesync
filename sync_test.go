@@ -14,41 +14,39 @@ func TestSyncFiles(t *testing.T) {
 	now := time.Now()
 	old := now.Add(-100 * time.Second)
 
-	localDir := CreateLocalDir(now, old)
-	remoteDir := CreateRemoteDir(now, old)
+	clientDir := CreateClientDir(now, old)
+	serverDir := CreateServerDir(now, old)
 
-	fs, err := remoteDir.List()
+	fs, err := serverDir.List()
 	if err != nil {
 		panic(err)
 	}
 	CheckFirstFis(t, now, old, fs)
 
-	fs, err = SyncFiles(SyncModeSend, &localDir, fs)
+	fs, err = SyncFiles(SyncModeSend, &clientDir, fs)
 	if err != nil {
 		panic(err)
 	}
 	CheckSecondFis(t, now, old, fs)
 
-	CheckInterimDir(t, now, old, localDir)
-
-	fs, err = SyncFiles(SyncModeBoth, &remoteDir, fs)
+	fs, err = SyncFiles(SyncModeBoth, &serverDir, fs)
 	if err != nil {
 		panic(err)
 	}
 	CheckThirdFis(t, now, old, fs)
 
-	fs, err = SyncFiles(SyncModeReceive, &localDir, fs)
+	fs, err = SyncFiles(SyncModeReceive, &clientDir, fs)
 	if err != nil {
 		panic(err)
 	}
 	CheckFis(t, "final", fs)
 
-	CheckFinalDir(t, now, localDir)
-	CheckFinalDir(t, now, remoteDir)
+	CheckFinalDir(t, now, clientDir)
+	CheckFinalDir(t, now, serverDir)
 }
 
-func CreateLocalDir(now, old time.Time) FakeDir {
-	return NewFakeDir("local",
+func CreateClientDir(now, old time.Time) FakeDir {
+	return NewFakeDir("client",
 		FakeFInfo("a", now, []byte("aaa")),
 
 		FakeFInfo("b1", now, []byte("b1new")),
@@ -61,8 +59,8 @@ func CreateLocalDir(now, old time.Time) FakeDir {
 	)
 }
 
-func CreateRemoteDir(now, old time.Time) FakeDir {
-	return NewFakeDir("remote",
+func CreateServerDir(now, old time.Time) FakeDir {
+	return NewFakeDir("server",
 		FakeFInfo("a", now, []byte("aaa")),
 
 		FakeFInfo("b1", old, []byte("b1old")),
@@ -96,30 +94,20 @@ func CheckSecondFis(t *testing.T, now, old time.Time, fis []FInfo) {
 		FakeFInfo("b1", now, []byte("b1new")),
 		FakeFInfo("b2", now, []byte("b2new")),
 		FakeFInfo("b3", now, []byte{}).Copy(),
+		FakeFInfo("b4", now, []byte{}).Copy(),
 
-		FakeFInfo("c1", old, []byte("c1old")).Copy(),
 		FakeFInfo("c3", old, []byte("c3old")).Copy(),
 	)
 }
 
 func CheckThirdFis(t *testing.T, now, old time.Time, fis []FInfo) {
 	CheckFis(t, "third", fis,
+		FakeFInfo("b3", old, []byte("b3old")).Copy(),
+
 		FakeFInfo("c1", now, []byte("c1new")),
 		FakeFInfo("c2", now, []byte("c2new")),
 		FakeFInfo("c3", now, []byte{}).Copy(),
-	)
-}
-
-func CheckInterimDir(t *testing.T, now, old time.Time, dir FakeDir) {
-	CheckDir(t, dir,
-		FakeFInfo("a", now, []byte("aaa")),
-
-		FakeFInfo("b1", now, []byte("b1new")),
-		FakeFInfo("b2", now, []byte("b2new")),
-		FakeFInfo("b3", now, []byte{}),
-
-		FakeFInfo("c1", old, []byte("c1old")),
-		FakeFInfo("c3", old, []byte("c3old")),
+		FakeFInfo("c4", now, []byte{}).Copy(),
 	)
 }
 
