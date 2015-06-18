@@ -34,6 +34,10 @@ func NewFInfo(fi os.FileInfo) FInfo {
 	}
 }
 
+func (dir FSDir) Path(name string) string {
+	return path.Join(string(dir), name)
+}
+
 func (dir FSDir) List() ([]FInfo, error) {
 	fis, err := ioutil.ReadDir(string(dir))
 	if err != nil {
@@ -43,7 +47,7 @@ func (dir FSDir) List() ([]FInfo, error) {
 	fs := []FInfo{}
 	for _, fi := range fis {
 		if fi.Mode()&os.ModeSymlink != 0 {
-			li, err := os.Stat(path.Join(string(dir), fi.Name()))
+			li, err := os.Stat(dir.Path(fi.Name()))
 			if err == nil {
 				fi = li
 			}
@@ -56,19 +60,24 @@ func (dir FSDir) List() ([]FInfo, error) {
 }
 
 func (dir FSDir) Read(f *FInfo) error {
-	r, err := os.Open(path.Join(string(dir), f.Name))
+	r, err := os.Open(dir.Path(f.Name))
 	if err != nil {
 		return err
 	}
+	defer r.Close()
 
 	f.Content, err = ioutil.ReadAll(r)
 	return err
 }
 
 func (dir FSDir) Write(f FInfo) error {
-	return nil
+	err := ioutil.WriteFile(dir.Path(f.Name), f.Content, 0644)
+	if err == nil {
+		err = os.Chtimes(dir.Path(f.Name), f.ModTime, f.ModTime)
+	}
+	return err
 }
 
 func (dir FSDir) Remove(name string) error {
-	return nil
+	return os.Remove(dir.Path(name))
 }

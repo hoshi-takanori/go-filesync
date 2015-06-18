@@ -46,16 +46,25 @@ func SyncFile(mode int, dir Dir, name string, l, r FInfo) *FInfo {
 		}
 	} else if l.ModTime.Unix() > r.ModTime.Unix() && l.Size > 0 {
 		if mode == SyncModeSend || mode == SyncModeBoth {
-			dir.Read(&l)
+			err := dir.Read(&l)
+			if err != nil {
+				println("read failed:", err.Error())
+			}
 			return &l
 		}
 	} else if l.ModTime.Unix() < r.ModTime.Unix() && r.Size > 0 {
 		if mode == SyncModeBoth || mode == SyncModeReceive {
-			dir.Write(r)
+			err := dir.Write(r)
+			if err != nil {
+				println("write failed:", err.Error())
+			}
 		}
 	} else if l.Name != "" {
 		if mode == SyncModeBoth || mode == SyncModeReceive {
-			dir.Remove(name)
+			err := dir.Remove(name)
+			if err != nil {
+				println("remove failed:", err.Error())
+			}
 		}
 		if mode == SyncModeSend || mode == SyncModeBoth {
 			return &l
