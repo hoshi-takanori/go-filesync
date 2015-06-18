@@ -5,13 +5,10 @@ package main
 import (
 	"encoding/gob"
 	"net/http"
-	"testing"
 	"time"
 )
 
-func TestClient(t *testing.T) {
-	println("TestClient")
-
+func main() {
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
 	req, err := http.NewRequest("PUT", "http://localhost:8080/", nil)
@@ -32,6 +29,7 @@ func TestClient(t *testing.T) {
 	}
 
 	for _, f := range fs {
-		PrintFInfo(f)
+		time := f.ModTime.Format("2006-01-02 15:04:05")
+		println(f.Mode.String(), time, f.Name, f.Size)
 	}
 }

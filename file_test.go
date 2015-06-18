@@ -1,3 +1,5 @@
+// +build file
+
 package main
 
 import (
@@ -32,5 +34,5 @@ func PrintFInfo(f FInfo) {
 		}
 		content += "\""
 	}
-	println(f.Mode.String(), f.Name, time, f.Size, content)
+	println(f.Mode.String(), time, f.Name, f.Size, content)
 }
