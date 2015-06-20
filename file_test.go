@@ -9,7 +9,8 @@ import (
 func TestList(t *testing.T) {
 	println("TestList")
 
-	fs, err := FSDir(".").List()
+	dir := NewFSDir(".", nil)
+	fs, err := dir.List()
 	if err != nil {
 		panic(err)
 	}

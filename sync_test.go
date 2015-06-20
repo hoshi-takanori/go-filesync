@@ -3,6 +3,8 @@
 package main
 
 import (
+	"log"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -27,25 +29,26 @@ func TestSyncFiles(t *testing.T) {
 		"touch src/f",
 	}, ";")).Run()
 
-	src := FSDir("src")
-	dst := FSDir("dst")
+	logger := log.New(os.Stdout, "", log.LstdFlags)
+	src := NewFSDir("src", logger)
+	dst := NewFSDir("dst", logger)
 
-	fs, err := SyncFiles(SyncModeBegin, &dst, nil)
+	fs, err := SyncFiles(SyncModeBegin, dst, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	fs, err = SyncFiles(SyncModeSend, &src, fs)
+	fs, err = SyncFiles(SyncModeSend, src, fs)
 	if err != nil {
 		panic(err)
 	}
 
-	fs, err = SyncFiles(SyncModeBoth, &dst, fs)
+	fs, err = SyncFiles(SyncModeBoth, dst, fs)
 	if err != nil {
 		panic(err)
 	}
 
-	fs, err = SyncFiles(SyncModeReceive, &src, fs)
+	fs, err = SyncFiles(SyncModeReceive, src, fs)
 	if err != nil {
 		panic(err)
 	}

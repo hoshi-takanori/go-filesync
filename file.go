@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -17,13 +18,17 @@ type FInfo struct {
 }
 
 type Dir interface {
+	Path(name string) string
 	List() ([]FInfo, error)
 	Read(f *FInfo) error
 	Write(f FInfo) error
 	Remove(name string) error
 }
 
-type FSDir string
+type FSDir struct {
+	Name   string
+	Logger *log.Logger
+}
 
 func NewFInfo(fi os.FileInfo) FInfo {
 	return FInfo{
@@ -34,12 +39,19 @@ func NewFInfo(fi os.FileInfo) FInfo {
 	}
 }
 
+func NewFSDir(name string, logger *log.Logger) Dir {
+	return FSDir{
+		Name:   name,
+		Logger: logger,
+	}
+}
+
 func (dir FSDir) Path(name string) string {
-	return path.Join(string(dir), name)
+	return path.Join(dir.Name, name)
 }
 
 func (dir FSDir) List() ([]FInfo, error) {
-	fis, err := ioutil.ReadDir(string(dir))
+	fis, err := ioutil.ReadDir(dir.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +72,9 @@ func (dir FSDir) List() ([]FInfo, error) {
 }
 
 func (dir FSDir) Read(f *FInfo) error {
+	if dir.Logger != nil {
+		dir.Logger.Println("read", dir.Path(f.Name))
+	}
 	r, err := os.Open(dir.Path(f.Name))
 	if err != nil {
 		return err
@@ -71,6 +86,9 @@ func (dir FSDir) Read(f *FInfo) error {
 }
 
 func (dir FSDir) Write(f FInfo) error {
+	if dir.Logger != nil {
+		dir.Logger.Println("save", dir.Path(f.Name))
+	}
 	err := ioutil.WriteFile(dir.Path(f.Name), f.Content, 0644)
 	if err == nil {
 		err = os.Chtimes(dir.Path(f.Name), f.ModTime, f.ModTime)
@@ -79,5 +97,8 @@ func (dir FSDir) Write(f FInfo) error {
 }
 
 func (dir FSDir) Remove(name string) error {
+	if dir.Logger != nil {
+		dir.Logger.Println("rm", dir.Path(name))
+	}
 	return os.Remove(dir.Path(name))
 }
