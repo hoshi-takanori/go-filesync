@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -51,25 +52,7 @@ func main() {
 }
 
 func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
-	var buf bytes.Buffer
-	err := msg.Encode(&buf)
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest("PUT", config.ServerURL, &buf)
-	if err != nil {
-		return err
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	var res Message
-	err = res.Decode(resp.Body)
+	res, err := SyncClientOne(client, msg)
 	if err != nil {
 		return err
 	}
@@ -77,4 +60,35 @@ func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
 	res.SyncEntries(msg2, config.ClientDir)
 
 	return nil
+}
+
+func SyncClientOne(client *http.Client, msg Message) (*Message, error) {
+	var buf bytes.Buffer
+	err := msg.Encode(&buf)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", config.ServerURL, &buf)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New("Bad Response: " + resp.Status)
+	}
+
+	var res Message
+	err = res.Decode(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }

@@ -13,7 +13,10 @@ func main() {
 	}
 
 	http.HandleFunc("/", SyncHandler)
-	http.ListenAndServe(config.Address, nil)
+	err = http.ListenAndServe(config.Address, nil)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func SyncHandler(w http.ResponseWriter, r *http.Request) {
