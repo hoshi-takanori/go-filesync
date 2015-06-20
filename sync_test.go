@@ -4,6 +4,7 @@ package main
 
 import (
 	"os/exec"
+	"strings"
 
 	"testing"
 )
@@ -11,20 +12,20 @@ import (
 func TestSyncFiles(t *testing.T) {
 	println("TestSyncFiles")
 
-	exec.Command("sh", "-c",
-		"rm -rf src dst;" +
-		"mkdir src dst;" +
-		"echo aaa > src/a;" +
-		"cp -p src/a dst;" +
-		"echo bbb > src/b;" +
-		"echo ccc > dst/c;" +
-		"echo eee > src/e;" +
-		"touch -A -0100 src/e;" +
-		"touch dst/e;" +
-		"echo fff > dst/f;" +
-		"touch -A -0200 dst/f;" +
-		"touch src/f;",
-	).Run()
+	exec.Command("sh", "-c", strings.Join([]string{
+		"rm -rf src dst",
+		"mkdir src dst",
+		"echo aaa > src/a",
+		"cp -p src/a dst",
+		"echo bbb > src/b",
+		"echo ccc > dst/c",
+		"echo eee > src/e",
+		"touch -A -0100 src/e",
+		"touch dst/e",
+		"echo fff > dst/f",
+		"touch -A -0200 dst/f",
+		"touch src/f",
+	}, ";")).Run()
 
 	src := FSDir("src")
 	dst := FSDir("dst")
