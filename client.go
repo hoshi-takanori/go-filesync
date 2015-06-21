@@ -6,16 +6,22 @@ import (
 	"bytes"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"path"
 	"time"
 )
+
+var logger *log.Logger
 
 func main() {
 	err := LoadConfig("config.json")
 	if err != nil {
 		panic(err)
 	}
+
+	logger = log.New(os.Stdout, "client: ", log.LstdFlags)
 
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
@@ -49,7 +55,9 @@ func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
 		return err
 	}
 
-	res.SyncEntries(msg2, config.ClientDir)
+	res.SyncEntries(msg2, func(name string) Dir {
+		return FSDir{path.Join(config.ClientDir, name), logger}
+	})
 
 	return nil
 }

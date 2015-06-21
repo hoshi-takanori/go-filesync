@@ -8,6 +8,7 @@ const (
 )
 
 func SyncFiles(mode int, dir Dir, remoteFs []FInfo) ([]FInfo, error) {
+	dir.Log("list " + dir.Path(""))
 	localFs, err := dir.List()
 	if mode == SyncModeBegin || err != nil {
 		return localFs, err

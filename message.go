@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"io"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -43,11 +44,13 @@ func (msg *Message) AddEntry(name string, fs []FInfo) {
 	})
 }
 
-func (msg *Message) ExpandEntries(base string) {
+func (msg *Message) ExpandEntries(base string, logger *log.Logger) {
 	entries := []Entry{}
 	for _, entry := range msg.Entries {
 		list, err := filepath.Glob(path.Join(base, entry.Name))
-		if err == nil {
+		if err != nil {
+			logger.Println("glob failed: " + entry.Name)
+		} else {
 			for _, name := range list {
 				fi, err := os.Stat(name)
 				if err == nil && fi.IsDir() &&
@@ -62,9 +65,9 @@ func (msg *Message) ExpandEntries(base string) {
 	msg.Entries = entries
 }
 
-func (msg Message) SyncEntries(res *Message, base string) {
+func (msg Message) SyncEntries(res *Message, makeDir func(string) Dir) {
 	for _, entry := range msg.Entries {
-		dir := FSDir{path.Join(base, entry.Name), nil}
+		dir := makeDir(entry.Name)
 		fs, err := SyncFiles(msg.Mode, dir, entry.Fs)
 		if err == nil && res != nil {
 			res.AddEntry(entry.Name, fs)
