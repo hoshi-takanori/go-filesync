@@ -33,6 +33,10 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if msg.Mode == SyncModeBegin {
+		msg.ExpandEntries(config.ServerDir)
+	}
+
 	res := NewMessage(msg.Mode + 1)
 	msg.SyncEntries(&res, config.ServerDir)
 

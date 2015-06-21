@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/gob"
 	"io"
+	"os"
 	"path"
+	"path/filepath"
+	"strings"
 )
 
 type Message struct {
@@ -25,11 +28,38 @@ func NewMessage(mode int) Message {
 	}
 }
 
+func (msg Message) Encode(w io.Writer) error {
+	return gob.NewEncoder(w).Encode(msg)
+}
+
+func (msg *Message) Decode(r io.Reader) error {
+	return gob.NewDecoder(r).Decode(msg)
+}
+
 func (msg *Message) AddEntry(name string, fs []FInfo) {
 	msg.Entries = append(msg.Entries, Entry{
 		Name: name,
 		Fs:   fs,
 	})
+}
+
+func (msg *Message) ExpandEntries(base string) {
+	entries := []Entry{}
+	for _, entry := range msg.Entries {
+		list, err := filepath.Glob(path.Join(base, entry.Name))
+		if err == nil {
+			for _, name := range list {
+				fi, err := os.Stat(name)
+				if err == nil && fi.IsDir() &&
+					strings.HasPrefix(name, base+"/") &&
+					!strings.Contains(name, "/.") {
+					name = strings.TrimPrefix(name, base+"/")
+					entries = append(entries, Entry{name, nil})
+				}
+			}
+		}
+	}
+	msg.Entries = entries
 }
 
 func (msg Message) SyncEntries(res *Message, base string) {
@@ -40,12 +70,4 @@ func (msg Message) SyncEntries(res *Message, base string) {
 			res.AddEntry(entry.Name, fs)
 		}
 	}
-}
-
-func (msg Message) Encode(w io.Writer) error {
-	return gob.NewEncoder(w).Encode(msg)
-}
-
-func (msg *Message) Decode(r io.Reader) error {
-	return gob.NewDecoder(r).Decode(msg)
 }
