@@ -30,8 +30,8 @@ func TestSyncFiles(t *testing.T) {
 	}, ";")).Run()
 
 	logger := log.New(os.Stdout, "", log.LstdFlags)
-	src := NewFSDir("src", logger)
-	dst := NewFSDir("dst", logger)
+	src := FSDir{"src", logger}
+	dst := FSDir{"dst", logger}
 
 	fs, err := SyncFiles(SyncModeBegin, dst, nil)
 	if err != nil {

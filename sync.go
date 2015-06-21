@@ -38,33 +38,36 @@ func SyncFiles(mode int, dir Dir, remoteFs []FInfo) ([]FInfo, error) {
 func SyncFile(mode int, dir Dir, name string, l, r FInfo) *FInfo {
 	if l.ModTime.Unix() == r.ModTime.Unix() {
 		if l.Size != r.Size {
-			println("SIZE DIFFER: local", l.Size, "remote", r.Size)
+			dir.Log("size differ " + dir.Path(name))
 		} else if l.Size == 0 {
-			println("SIZE ZERO")
+			dir.Log("size zero " + dir.Path(name))
 		}
 		if mode == SyncModeSend {
 			return &l
 		}
 	} else if l.ModTime.Unix() > r.ModTime.Unix() && l.Size > 0 {
 		if mode == SyncModeSend || mode == SyncModeBoth {
+			dir.Log("read " + dir.Path(name))
 			err := dir.Read(&l)
 			if err != nil {
-				println("read failed:", err.Error())
+				dir.Log("read failed: " + err.Error())
 			}
 			return &l
 		}
 	} else if l.ModTime.Unix() < r.ModTime.Unix() && r.Size > 0 {
 		if mode == SyncModeBoth || mode == SyncModeReceive {
+			dir.Log("save " + dir.Path(name))
 			err := dir.Write(r)
 			if err != nil {
-				println("write failed:", err.Error())
+				dir.Log("write failed: " + err.Error())
 			}
 		}
 	} else if l.Name != "" {
 		if mode == SyncModeBoth || mode == SyncModeReceive {
+			dir.Log("rm " + dir.Path(name))
 			err := dir.Remove(name)
 			if err != nil {
-				println("remove failed:", err.Error())
+				dir.Log("remove failed: " + err.Error())
 			}
 		}
 		if mode == SyncModeSend || mode == SyncModeBoth {

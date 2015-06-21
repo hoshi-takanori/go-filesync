@@ -47,6 +47,10 @@ func (dir FakeDir) Path(name string) string {
 	return path.Join(dir.name, name)
 }
 
+func (dir FakeDir) Log(str string) {
+	println(str)
+}
+
 func (dir FakeDir) List() ([]FInfo, error) {
 	fs := []FInfo{}
 	for _, fi := range dir.fmap {
@@ -65,7 +69,6 @@ func (dir FakeDir) Read(f *FInfo) error {
 }
 
 func (dir *FakeDir) Write(f FInfo) error {
-	println("save", dir.Path(f.Name))
 	if f.Size == 0 || len(f.Content) == 0 {
 		return os.ErrInvalid
 	}
@@ -74,7 +77,6 @@ func (dir *FakeDir) Write(f FInfo) error {
 }
 
 func (dir *FakeDir) Remove(name string) error {
-	println("rm", dir.Path(name))
 	_, ok := dir.fmap[name]
 	if ok {
 		delete(dir.fmap, name)

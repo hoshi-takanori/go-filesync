@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
-	"strings"
 	"time"
 )
 
@@ -27,17 +25,11 @@ func main() {
 	}
 
 	msg := NewMessage(SyncModeBegin)
-	for _, fi := range fis {
-		if fi.Mode()&os.ModeSymlink != 0 {
-			li, err := os.Stat(path.Join(config.ClientDir, fi.Name()))
-			if err == nil {
-				fi = li
-			}
-		}
-		if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+	ListFiles(config.ClientDir, fis, func(fi os.FileInfo) {
+		if fi.IsDir() {
 			msg.AddEntry(fi.Name(), nil)
 		}
-	}
+	})
 
 	msg2 := NewMessage(SyncModeBoth)
 	err = SyncClient(&client, msg, &msg2)

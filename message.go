@@ -34,7 +34,7 @@ func (msg *Message) AddEntry(name string, fs []FInfo) {
 
 func (msg Message) SyncEntries(res *Message, base string) {
 	for _, entry := range msg.Entries {
-		dir := NewFSDir(path.Join(base, entry.Name), nil)
+		dir := FSDir{path.Join(base, entry.Name), nil}
 		fs, err := SyncFiles(msg.Mode, dir, entry.Fs)
 		if err == nil && res != nil {
 			res.AddEntry(entry.Name, fs)
