@@ -68,9 +68,11 @@ func (msg *Message) ExpandEntries(base string, logger *log.Logger) {
 func (msg Message) SyncEntries(res *Message, makeDir func(string) Dir) {
 	for _, entry := range msg.Entries {
 		dir := makeDir(entry.Name)
-		fs, err := SyncFiles(msg.Mode, dir, entry.Fs)
-		if err == nil && res != nil {
-			res.AddEntry(entry.Name, fs)
+		if dir != nil {
+			fs, err := SyncFiles(msg.Mode, dir, entry.Fs)
+			if err == nil && res != nil {
+				res.AddEntry(entry.Name, fs)
+			}
 		}
 	}
 }

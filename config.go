@@ -13,6 +13,7 @@ type Config struct {
 
 	ServerURL string
 	ClientDir string
+	GlobEntry string
 }
 
 var config Config

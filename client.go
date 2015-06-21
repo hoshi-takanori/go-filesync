@@ -21,21 +21,26 @@ func main() {
 		panic(err)
 	}
 
-	logger = log.New(os.Stdout, "client: ", log.LstdFlags)
+	logger = log.New(os.Stdout, "", log.LstdFlags)
 
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
-	fis, err := ioutil.ReadDir(config.ClientDir)
-	if err != nil {
-		panic(err)
-	}
-
 	msg := NewMessage(SyncModeBegin)
-	ListFiles(config.ClientDir, fis, func(fi os.FileInfo) {
-		if fi.IsDir() {
-			msg.AddEntry(fi.Name(), nil)
+
+	if config.GlobEntry != "" {
+		msg.AddEntry(config.GlobEntry, nil)
+	} else {
+		fis, err := ioutil.ReadDir(config.ClientDir)
+		if err != nil {
+			panic(err)
 		}
-	})
+
+		ListFiles(config.ClientDir, fis, func(fi os.FileInfo) {
+			if fi.IsDir() {
+				msg.AddEntry(fi.Name(), nil)
+			}
+		})
+	}
 
 	msg2 := NewMessage(SyncModeBoth)
 	err = SyncClient(&client, msg, &msg2)

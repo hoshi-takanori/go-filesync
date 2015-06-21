@@ -20,7 +20,11 @@ func TestClient(t *testing.T) {
 	client := http.Client{Timeout: time.Duration(10 * time.Second)}
 
 	msg := NewMessage(SyncModeBegin)
-	msg.AddEntry("*", nil)
+	if config.GlobEntry != "" {
+		msg.AddEntry(config.GlobEntry, nil)
+	} else {
+		msg.AddEntry("*", nil)
+	}
 
 	res, err := SyncClientOne(&client, msg)
 	if err != nil {
