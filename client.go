@@ -61,7 +61,11 @@ func SyncClient(client *http.Client, msg Message, msg2 *Message) error {
 	}
 
 	res.SyncEntries(msg2, func(name string) Dir {
-		return FSDir{path.Join(config.ClientDir, name), logger}
+		if config.GlobEntry != "" {
+			return NewCustomDir(name, logger)
+		} else {
+			return FSDir{path.Join(config.ClientDir, name), logger}
+		}
 	})
 
 	return nil
