@@ -47,6 +47,7 @@ func (msg *Message) AddEntry(name string, fs []FInfo) {
 func (msg *Message) ExpandEntries(base string, logger *log.Logger) {
 	entries := []Entry{}
 	for _, entry := range msg.Entries {
+		logger.Println("glob " + entry.Name)
 		list, err := filepath.Glob(path.Join(base, entry.Name))
 		if err != nil {
 			logger.Println("glob failed: " + entry.Name)

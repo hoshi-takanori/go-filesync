@@ -49,6 +49,7 @@ func (dir CustomDir) Write(f FInfo) error {
 		err = os.Chown(filePath, dir.uid, dir.gid)
 	}
 	if err == nil && !flag {
+		dir.Log("link " + basePath + " -> " + path.Join("export", f.Name))
 		err2 := os.Symlink(path.Join("export", f.Name), basePath)
 		if err2 == nil {
 			os.Lchown(basePath, dir.uid, dir.gid)

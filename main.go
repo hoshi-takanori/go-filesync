@@ -48,6 +48,12 @@ func SyncHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	remote := r.Header.Get("X-Forwarded-For")
+	if remote == "" {
+		remote = r.RemoteAddr
+	}
+	logger.Printf("mode %d from %s\n", msg.Mode, remote)
+
 	if msg.Mode == SyncModeBegin {
 		msg.ExpandEntries(config.ServerDir, logger)
 	}
